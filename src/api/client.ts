@@ -15,7 +15,14 @@ api.interceptors.request.use((config) => {
   }
   
   const branchId = localStorage.getItem('selectedBranchId');
-  if (branchId && branchId !== 'undefined' && branchId !== 'null') {
+  const isAuthRequest = typeof config.url === 'string' && config.url.startsWith('/auth');
+
+  if (
+    branchId &&
+    branchId !== 'undefined' &&
+    branchId !== 'null' &&
+    !isAuthRequest
+  ) {
     config.headers['x-branch-id'] = branchId;
   }
   
