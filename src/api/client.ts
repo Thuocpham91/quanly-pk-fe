@@ -13,19 +13,7 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  
-  const branchId = localStorage.getItem('selectedBranchId');
-  const isAuthRequest = typeof config.url === 'string' && config.url.startsWith('/auth');
 
-  if (
-    branchId &&
-    branchId !== 'undefined' &&
-    branchId !== 'null' &&
-    !isAuthRequest
-  ) {
-    config.headers['x-branch-id'] = branchId;
-  }
-  
   return config;
 });
 
