@@ -11,7 +11,7 @@ export const connectSocket = (token: string): Socket => {
     auth: {
       token: `Bearer ${token}`
     },
-    transports: ['websocket', 'polling'], // Allow fallback
+    transports: ['polling', 'websocket'], // Start with polling then upgrade
   });
 
   socket.on('connect', () => {
