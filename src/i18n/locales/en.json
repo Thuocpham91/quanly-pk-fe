@@ -22,7 +22,8 @@
     "select_classification": "Select Classification",
     "select_unit": "Select Unit",
     "confirm_delete": "Are you sure you want to delete?",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "select_branch_warning": "Please select a branch before performing this action."
   },
   "landing": {
     "hero_badge": "Best Veterinary Care in Town",

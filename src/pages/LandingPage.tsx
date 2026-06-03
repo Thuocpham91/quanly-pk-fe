@@ -114,24 +114,32 @@ const LandingPage: React.FC = () => {
             {t('landing.hero_subtitle')}
           </p>
           <div style={{ display: 'flex', gap: '1rem' }}>
-            <button style={{ 
-              backgroundColor: 'var(--primary)', 
-              color: 'white', 
-              padding: '1rem 2rem', 
-              fontSize: '1.1rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}>
-              {t('common.book_appointment')} <ArrowRight size={20} />
-            </button>
-            <button style={{ 
-              backgroundColor: 'transparent', 
-              border: '2px solid #e2e8f0',
-              padding: '1rem 2rem', 
-              fontSize: '1.1rem'
-            }}>
-              {t('common.learn_more')}
+            <button 
+              onClick={() => {
+                document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              style={{ 
+                backgroundColor: 'var(--primary)', 
+                color: 'white', 
+                border: 'none',
+                padding: '1rem 2rem', 
+                fontSize: '1.1rem',
+                cursor: 'pointer',
+                borderRadius: '0.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                boxShadow: '0 4px 12px rgba(99, 102, 241, 0.25)',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#4f46e5';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--primary)';
+              }}
+            >
+              {t('common.learn_more')} <ArrowRight size={20} />
             </button>
           </div>
         </div>

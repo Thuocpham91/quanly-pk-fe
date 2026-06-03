@@ -22,7 +22,8 @@
     "select_classification": "Chọn phân loại",
     "select_unit": "Chọn đơn vị tính",
     "confirm_delete": "Bạn có chắc chắn muốn xóa không?",
-    "loading": "Đang tải..."
+    "loading": "Đang tải...",
+    "select_branch_warning": "Vui lòng chọn chi nhánh trước khi thực hiện thao tác này."
   },
   "landing": {
     "hero_badge": "Dịch vụ thú y tốt nhất khu vực",

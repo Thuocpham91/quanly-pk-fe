@@ -6,8 +6,10 @@ import { useBranchContext } from '../context/BranchContext';
 import Pagination from '../components/Pagination';
 import PetModal from '../components/PetModal';
 import MedicalRecordModal from '../components/MedicalRecordModal';
+import { useTranslation } from 'react-i18next';
 
 const PetsPage: React.FC = () => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
@@ -69,6 +71,12 @@ const PetsPage: React.FC = () => {
   });
 
   const handleSubmit = async (data: any) => {
+    if (!selectedPet) {
+      if (!selectedBranchId) {
+        alert(t('common.select_branch_warning'));
+        return;
+      }
+    }
     await petMutation.mutateAsync({ id: selectedPet?.id, data });
   };
 
@@ -78,6 +86,10 @@ const PetsPage: React.FC = () => {
   };
 
   const handleAdd = () => {
+    if (!selectedBranchId) {
+      alert(t('common.select_branch_warning'));
+      return;
+    }
     setSelectedPet(null);
     setIsModalOpen(true);
   };

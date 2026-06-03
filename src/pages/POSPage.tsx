@@ -74,6 +74,9 @@ interface OrderTab {
 }
 
 const POSPage: React.FC = () => {
+  const { selectedBranchId } = useBranchContext();
+  const branchId = (!selectedBranchId || selectedBranchId === 'undefined' || selectedBranchId === 'null') ? undefined : selectedBranchId;
+
   const [searchTerm, setSearchTerm] = useState('');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [discount, setDiscount] = useState<number>(0);
@@ -909,8 +912,8 @@ const POSPage: React.FC = () => {
   };
 
   const { data: searchResultsData } = useQuery({
-    queryKey: ['searchCustomers', customerSearchQuery],
-    queryFn: () => customersApi.searchCustomers(customerSearchQuery),
+    queryKey: ['searchCustomers', customerSearchQuery, branchId],
+    queryFn: () => customersApi.searchCustomers(customerSearchQuery, branchId),
     enabled: customerSearchQuery.trim().length > 0,
   });
   const searchResults = searchResultsData?.data || [];
@@ -929,9 +932,6 @@ const POSPage: React.FC = () => {
     queryKey: ['products'],
     queryFn: inventoryApi.getProducts,
   });
-
-  const { selectedBranchId } = useBranchContext();
-  const branchId = (!selectedBranchId || selectedBranchId === 'undefined' || selectedBranchId === 'null') ? undefined : selectedBranchId;
 
   // Fetch Rooms with cages for admitting
   const { data: admitRooms = [] } = useQuery({
@@ -1724,7 +1724,13 @@ const POSPage: React.FC = () => {
                   Chọn khách hàng
                 </button>
                 <button 
-                  onClick={() => setShowQuickCustomerModal(true)}
+                  onClick={() => {
+                    if (!branchId) {
+                      alert('Vui lòng chọn chi nhánh trước khi thực hiện thao tác này.');
+                      return;
+                    }
+                    setShowQuickCustomerModal(true);
+                  }}
                   style={{ 
                     padding: '0.25rem 0.5rem', 
                     fontSize: '0.75rem', 
@@ -1801,6 +1807,10 @@ const POSPage: React.FC = () => {
                       <span>Không tìm thấy khách hàng</span>
                       <button
                         onClick={() => {
+                          if (!branchId) {
+                            alert('Vui lòng chọn chi nhánh trước khi thực hiện thao tác này.');
+                            return;
+                          }
                           setQuickCustomerName(customerSearchQuery);
                           setIsSearchingCustomer(false);
                           setCustomerSearchQuery('');
@@ -1945,7 +1955,13 @@ const POSPage: React.FC = () => {
                   </select>
                   <button
                     type="button"
-                    onClick={() => setShowQuickPetModal(true)}
+                    onClick={() => {
+                      if (!branchId) {
+                        alert('Vui lòng chọn chi nhánh trước khi thực hiện thao tác này.');
+                        return;
+                      }
+                      setShowQuickPetModal(true);
+                    }}
                     style={{
                       padding: '0.2rem 0.4rem',
                       fontSize: '0.7rem',
@@ -2747,6 +2763,10 @@ const POSPage: React.FC = () => {
                   type="button"
                   disabled={createCustomerMutation.isPending}
                   onClick={async () => {
+                    if (!branchId) {
+                      alert('Vui lòng chọn chi nhánh trước khi thực hiện thao tác này.');
+                      return;
+                    }
                     if (!quickCustomerName.trim()) {
                       alert('Vui lòng nhập họ tên khách hàng');
                       setActiveCustomerModalTab('customer');
@@ -2841,6 +2861,10 @@ const POSPage: React.FC = () => {
             {/* Modal Form */}
             <form onSubmit={async (e) => {
               e.preventDefault();
+              if (!branchId) {
+                alert('Vui lòng chọn chi nhánh trước khi thực hiện thao tác này.');
+                return;
+              }
               if (!quickPetName.trim()) {
                 alert('Vui lòng nhập tên thú cưng');
                 return;

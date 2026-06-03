@@ -119,12 +119,17 @@ const DashboardLayout: React.FC = () => {
     ? allBranches
     : allBranches.filter(b => userBranchIds.includes(b.id));
 
-  // Nếu chỉ có 1 chi nhánh và chưa set, tự động chọn
+  // Kiểm tra và tự động chọn chi nhánh hợp lệ (tránh lấy id chi nhánh cũ ở DB khác lưu trong localStorage)
   React.useEffect(() => {
-    if (branches.length === 1 && !selectedBranchId) {
-      setSelectedBranchId(branches[0].id);
+    if (branches.length > 0) {
+      const isValid = branches.some(b => b.id === selectedBranchId);
+      if (!isValid) {
+        setSelectedBranchId(branches[0].id);
+      }
+    } else if (paginatedBranches && branches.length === 0 && selectedBranchId) {
+      setSelectedBranchId('');
     }
-  }, [branches.length, selectedBranchId]);
+  }, [branches, selectedBranchId, paginatedBranches, setSelectedBranchId]);
 
   // Lấy danh sách permissions của user (theo chi nhánh đang chọn hoặc tổng hợp tất cả)
   const userPermissions = React.useMemo(() => {

@@ -10,6 +10,7 @@ import AppointmentModal from './AppointmentModal';
 import MedicalRecordModal from './MedicalRecordModal';
 import { ClipboardList } from 'lucide-react';
 import { useBranchContext } from '../context/BranchContext';
+import { useTranslation } from 'react-i18next';
 
 interface CustomerDetailsModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ interface CustomerDetailsModalProps {
 }
 
 const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({ isOpen, onClose, customer }) => {
+  const { t } = useTranslation();
   const { selectedBranchId } = useBranchContext();
   const [activeTab, setActiveTab] = useState<'pets' | 'appointments' | 'services'>('pets');
   const queryClient = useQueryClient();
@@ -134,6 +136,12 @@ const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({ isOpen, onC
   };
 
   const handlePetSubmit = async (data: any) => {
+    if (!selectedPet) {
+      if (!selectedBranchId) {
+        alert(t('common.select_branch_warning'));
+        return;
+      }
+    }
     await petMutation.mutateAsync({ id: selectedPet?.id, data });
   };
 
@@ -359,7 +367,14 @@ const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({ isOpen, onC
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                     <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700', color: '#1e293b' }}>Danh sách thú cưng</h4>
                     <button
-                      onClick={() => { setSelectedPet(null); setIsPetModalOpen(true); }}
+                      onClick={() => {
+                        if (!selectedBranchId) {
+                          alert(t('common.select_branch_warning'));
+                          return;
+                        }
+                        setSelectedPet(null);
+                        setIsPetModalOpen(true);
+                      }}
                       className="btn-primary"
                       style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.875rem' }}
                     >

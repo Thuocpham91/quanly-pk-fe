@@ -69,6 +69,10 @@ const CustomersPage: React.FC = () => {
     if (selectedCustomer) {
       await updateMutation.mutateAsync({ id: selectedCustomer.id, data });
     } else {
+      if (!selectedBranchId) {
+        alert(t('common.select_branch_warning'));
+        return;
+      }
       await createMutation.mutateAsync(data);
     }
   };
@@ -79,6 +83,10 @@ const CustomersPage: React.FC = () => {
   };
 
   const handleAdd = () => {
+    if (!selectedBranchId) {
+      alert(t('common.select_branch_warning'));
+      return;
+    }
     setSelectedCustomer(undefined);
     setIsModalOpen(true);
   };
