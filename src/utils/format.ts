@@ -23,7 +23,7 @@ export const parseNumber = (value: string): number => {
 /**
  * Formats error responses from backend, translates validation errors.
  */
-export const getErrorMessage = (error: any, t: (key: string, defaultValue?: string) => string): string => {
+export const getErrorMessage = (error: any, t: any): string => {
   const message = error?.response?.data?.message || error?.message || 'Unknown error';
   
   const translateSingle = (msg: string): string => {
