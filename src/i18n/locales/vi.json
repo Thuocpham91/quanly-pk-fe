@@ -23,7 +23,10 @@
     "select_unit": "Chọn đơn vị tính",
     "confirm_delete": "Bạn có chắc chắn muốn xóa không?",
     "loading": "Đang tải...",
-    "select_branch_warning": "Vui lòng chọn chi nhánh trước khi thực hiện thao tác này."
+    "select_branch_warning": "Vui lòng chọn chi nhánh trước khi thực hiện thao tác này.",
+    "btn_cancel": "Hủy bỏ",
+    "btn_create": "Thêm mới",
+    "btn_save": "Lưu lại"
   },
   "landing": {
     "hero_badge": "Dịch vụ thú y tốt nhất khu vực",
@@ -111,7 +114,8 @@
     "fetching": "Đang tải chi nhánh...",
     "no_branches": "Không tìm thấy chi nhánh nào",
     "btn_cancel": "Hủy",
-    "btn_save": "Lưu thay đổi"
+    "btn_save": "Lưu thay đổi",
+    "btn_create": "Tạo mới"
   },
   "customers": {
     "title": "Quản lý khách hàng",

@@ -128,7 +128,9 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, onSubmit, is
         width: '100%',
         maxWidth: '500px',
         boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-        overflow: 'hidden'
+        display: 'flex',
+        flexDirection: 'column',
+        maxHeight: '90vh'
       }} onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div style={{
@@ -152,7 +154,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, onSubmit, is
         </div>
 
         {/* Body */}
-        <form onSubmit={handleSubmit} style={{ padding: '1.5rem' }}>
+        <form onSubmit={handleSubmit} style={{ padding: '1.5rem', overflowY: 'auto', flex: 1 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             {/* Name */}
             <div>

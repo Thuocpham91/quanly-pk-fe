@@ -231,10 +231,12 @@ const UserModal: React.FC<UserModalProps> = ({
           backgroundColor: "white",
           borderRadius: "1rem",
           width: "100%",
-          maxWidth: "500px",
+          maxWidth: "650px", // Expanded for better 2-column details spacing
           boxShadow:
             "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          maxHeight: "90vh",
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -271,7 +273,7 @@ const UserModal: React.FC<UserModalProps> = ({
         </div>
 
         {/* Body */}
-        <form onSubmit={handleSubmit} style={{ padding: "1.5rem" }}>
+        <form onSubmit={handleSubmit} style={{ padding: "1.5rem", overflowY: "auto", flex: 1 }}>
           <div
             style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}
           >

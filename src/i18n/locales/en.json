@@ -23,7 +23,10 @@
     "select_unit": "Select Unit",
     "confirm_delete": "Are you sure you want to delete?",
     "loading": "Loading...",
-    "select_branch_warning": "Please select a branch before performing this action."
+    "select_branch_warning": "Please select a branch before performing this action.",
+    "btn_cancel": "Cancel",
+    "btn_create": "Create",
+    "btn_save": "Save"
   },
   "landing": {
     "hero_badge": "Best Veterinary Care in Town",
@@ -111,7 +114,8 @@
     "fetching": "Fetching branches...",
     "no_branches": "No branches found",
     "btn_cancel": "Cancel",
-    "btn_save": "Save Changes"
+    "btn_save": "Save Changes",
+    "btn_create": "Create"
   },
   "customers": {
     "title": "Owners Management",
