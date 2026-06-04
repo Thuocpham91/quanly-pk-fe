@@ -53,11 +53,11 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
     enabled: isOpen && !!selectedCustId,
   });
 
-  // Query branches
+  // Query branches (only enabled when no specific branch is selected, i.e. "All branches" mode)
   const { data: branchData } = useQuery({
     queryKey: ['branchesForAppt'],
     queryFn: () => getBranches(1, 50),
-    enabled: isOpen,
+    enabled: isOpen && !selectedBranchId,
   });
   const branches = branchData?.data || [];
 
@@ -320,73 +320,124 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem' }}>
-                <span style={{color: '#ef4444'}}>*</span> Chi nhánh hẹn
-              </label>
-              <select
-                name="branchId"
-                value={formData.branchId}
-                onChange={handleChange}
-                required
-                style={{
-                  width: '100%', padding: '0.75rem 1rem',
-                  borderRadius: '0.75rem', border: '1px solid var(--border)', outline: 'none',
-                  backgroundColor: 'white'
-                }}
-              >
-                <option value="">Chọn chi nhánh</option>
-                {branches.map((b) => (
-                  <option key={b.id} value={b.id}>{b.name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem' }}>
-                Nhân viên thực hiện
-              </label>
-              <select
-                name="userId"
-                value={formData.userId}
-                onChange={handleChange}
-                style={{
-                  width: '100%', padding: '0.75rem 1rem',
-                  borderRadius: '0.75rem', border: '1px solid var(--border)', outline: 'none',
-                  backgroundColor: 'white'
-                }}
-              >
-                <option value="">-- Chưa giao việc --</option>
-                {branchUsers.map((u: any) => (
-                  <option key={u.id} value={u.id}>{u.fullName} ({u.email})</option>
-                ))}
-              </select>
-            </div>
-          </div>
+          {/* Conditional layout: show branch selection if user is in "All branches" mode */}
+          {!selectedBranchId ? (
+            <>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem' }}>
+                    <span style={{color: '#ef4444'}}>*</span> Chi nhánh hẹn
+                  </label>
+                  <select
+                    name="branchId"
+                    value={formData.branchId}
+                    onChange={handleChange}
+                    required
+                    style={{
+                      width: '100%', padding: '0.75rem 1rem',
+                      borderRadius: '0.75rem', border: '1px solid var(--border)', outline: 'none',
+                      backgroundColor: 'white'
+                    }}
+                  >
+                    <option value="">Chọn chi nhánh</option>
+                    {branches.map((b) => (
+                      <option key={b.id} value={b.id}>{b.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem' }}>
+                    Nhân viên thực hiện
+                  </label>
+                  <select
+                    name="userId"
+                    value={formData.userId}
+                    onChange={handleChange}
+                    style={{
+                      width: '100%', padding: '0.75rem 1rem',
+                      borderRadius: '0.75rem', border: '1px solid var(--border)', outline: 'none',
+                      backgroundColor: 'white'
+                    }}
+                  >
+                    <option value="">-- Chưa giao việc --</option>
+                    {branchUsers.map((u: any) => (
+                      <option key={u.id} value={u.id}>{u.fullName} ({u.email})</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
 
-          <div>
-            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem' }}>
-              <span style={{color: '#ef4444'}}>*</span> Lý do cuộc hẹn / Dịch vụ
-            </label>
-            <select
-              name="purpose"
-              value={formData.purpose}
-              onChange={handleChange}
-              style={{
-                width: '100%', padding: '0.75rem 1rem',
-                borderRadius: '0.75rem', border: '1px solid var(--border)', outline: 'none',
-                backgroundColor: 'white'
-              }}
-            >
-              <option value="Khám tổng quát">Khám bệnh tổng quát</option>
-              <option value="Tiêm phòng">Tiêm chủng / Vaccine</option>
-              <option value="Điều trị bệnh">Điều trị bệnh ngoại trú</option>
-              <option value="Phẫu thuật">Phẫu thuật / Triệt sản</option>
-              <option value="Spa & Grooming">Tắm rửa / Cắt tỉa lông (Spa)</option>
-              <option value="Lưu trú (Boarding)">Gửi thú cưng (Boarding)</option>
-              <option value="Khác">Khác</option>
-            </select>
-          </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem' }}>
+                  <span style={{color: '#ef4444'}}>*</span> Lý do cuộc hẹn / Dịch vụ
+                </label>
+                <select
+                  name="purpose"
+                  value={formData.purpose}
+                  onChange={handleChange}
+                  style={{
+                    width: '100%', padding: '0.75rem 1rem',
+                    borderRadius: '0.75rem', border: '1px solid var(--border)', outline: 'none',
+                    backgroundColor: 'white'
+                  }}
+                >
+                  <option value="Khám tổng quát">Khám bệnh tổng quát</option>
+                  <option value="Tiêm phòng">Tiêm chủng / Vaccine</option>
+                  <option value="Điều trị bệnh">Điều trị bệnh ngoại trú</option>
+                  <option value="Phẫu thuật">Phẫu thuật / Triệt sản</option>
+                  <option value="Spa & Grooming">Tắm rửa / Cắt tỉa lông (Spa)</option>
+                  <option value="Lưu trú (Boarding)">Gửi thú cưng (Boarding)</option>
+                  <option value="Khác">Khác</option>
+                </select>
+              </div>
+            </>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem' }}>
+                  Nhân viên thực hiện
+                </label>
+                <select
+                  name="userId"
+                  value={formData.userId}
+                  onChange={handleChange}
+                  style={{
+                    width: '100%', padding: '0.75rem 1rem',
+                    borderRadius: '0.75rem', border: '1px solid var(--border)', outline: 'none',
+                    backgroundColor: 'white'
+                  }}
+                >
+                  <option value="">-- Chưa giao việc --</option>
+                  {branchUsers.map((u: any) => (
+                    <option key={u.id} value={u.id}>{u.fullName} ({u.email})</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem' }}>
+                  <span style={{color: '#ef4444'}}>*</span> Lý do cuộc hẹn / Dịch vụ
+                </label>
+                <select
+                  name="purpose"
+                  value={formData.purpose}
+                  onChange={handleChange}
+                  style={{
+                    width: '100%', padding: '0.75rem 1rem',
+                    borderRadius: '0.75rem', border: '1px solid var(--border)', outline: 'none',
+                    backgroundColor: 'white'
+                  }}
+                >
+                  <option value="Khám tổng quát">Khám bệnh tổng quát</option>
+                  <option value="Tiêm phòng">Tiêm chủng / Vaccine</option>
+                  <option value="Điều trị bệnh">Điều trị bệnh ngoại trú</option>
+                  <option value="Phẫu thuật">Phẫu thuật / Triệt sản</option>
+                  <option value="Spa & Grooming">Tắm rửa / Cắt tỉa lông (Spa)</option>
+                  <option value="Lưu trú (Boarding)">Gửi thú cưng (Boarding)</option>
+                  <option value="Khác">Khác</option>
+                </select>
+              </div>
+            </div>
+          )}
 
           <div>
             <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem' }}>

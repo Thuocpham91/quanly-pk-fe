@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, User, Phone, Mail, MapPin, Wallet, Plus, Calendar, Dog, Edit, Trash2, CheckCircle, XCircle, FileText } from 'lucide-react';
-import { type Customer, topUpWallet } from '../api/customers';
+import { type Customer } from '../api/customers';
 import { getPetsByOwner, createPet, updatePet, deletePet } from '../api/pets';
 import { getCustomerAppointments, createAppointment, updateAppointment } from '../api/appointments';
 import { getOrders } from '../api/orders';
@@ -35,9 +35,7 @@ const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({ isOpen, onC
   const [isMedicalRecordModalOpen, setIsMedicalRecordModalOpen] = useState(false);
   const [selectedMedicalRecordPet, setSelectedMedicalRecordPet] = useState<any>(null);
 
-  // Topup variable
-  const [showTopup, setShowTopup] = useState(false);
-  const [topupAmount, setTopupAmount] = useState('');
+  // Topup variables removed
 
   // Queries
   const { data: pets, isLoading: loadingPets } = useQuery({
@@ -63,16 +61,6 @@ const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({ isOpen, onC
   });
 
   // Mutations
-  const topupMutation = useMutation({
-    mutationFn: ({ id, amount }: { id: string; amount: number }) => topUpWallet(id, amount),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customers'] });
-      queryClient.invalidateQueries({ queryKey: ['customerDetails', customerId] });
-      setShowTopup(false);
-      setCustBalance(prev => prev + Number(topupAmount));
-      setTopupAmount('');
-    },
-  });
 
   const [custBalance, setCustBalance] = useState(customer.walletBalance);
 
@@ -125,15 +113,7 @@ const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({ isOpen, onC
 
   if (!isOpen) return null;
 
-  const handleTopup = (e: React.FormEvent) => {
-    e.preventDefault();
-    const amount = Number(topupAmount);
-    if (isNaN(amount) || amount <= 0) {
-      alert('Vui lòng nhập số tiền hợp lệ!');
-      return;
-    }
-    topupMutation.mutate({ id: customerId, amount });
-  };
+
 
   const handlePetSubmit = async (data: any) => {
     if (!selectedPet) {
@@ -261,48 +241,6 @@ const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({ isOpen, onC
               <div style={{ fontSize: '1.5rem', fontWeight: '800', color: '#059669' }}>
                 {formatCurrency(custBalance)}
               </div>
-              
-              {showTopup ? (
-                <form onSubmit={handleTopup} style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
-                  <input
-                    type="number"
-                    placeholder="Số tiền..."
-                    value={topupAmount}
-                    onChange={(e) => setTopupAmount(e.target.value)}
-                    required
-                    style={{
-                      flex: 1, padding: '0.5rem', fontSize: '0.875rem',
-                      border: '1px solid var(--border)', borderRadius: '0.5rem', outline: 'none'
-                    }}
-                  />
-                  <button type="submit" disabled={topupMutation.isPending} style={{
-                    padding: '0.5rem 0.8rem', backgroundColor: '#059669', color: 'white', border: 'none',
-                    borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.875rem', fontWeight: '600'
-                  }}>
-                    Nạp
-                  </button>
-                  <button type="button" onClick={() => setShowTopup(false)} style={{
-                    padding: '0.5rem', backgroundColor: '#ef4444', color: 'white', border: 'none',
-                    borderRadius: '0.5rem', cursor: 'pointer'
-                  }}>
-                    <X size={16} />
-                  </button>
-                </form>
-              ) : (
-                <button
-                  onClick={() => setShowTopup(true)}
-                  style={{
-                    width: '100%', padding: '0.6rem', border: '1px dashed #059669',
-                    borderRadius: '0.75rem', backgroundColor: 'rgba(5, 150, 105, 0.03)',
-                    color: '#059669', fontWeight: '600', fontSize: '0.875rem', cursor: 'pointer',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(5, 150, 105, 0.08)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(5, 150, 105, 0.03)'; }}
-                >
-                  Nạp tiền vào ví
-                </button>
-              )}
             </div>
 
             {/* Notes Section */}
