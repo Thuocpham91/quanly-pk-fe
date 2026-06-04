@@ -167,7 +167,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, onSubmit, is
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  placeholder="Main Clinic"
+                  placeholder={t('branches.placeholder_name')}
                   style={{
                     width: '100%',
                     padding: '0.75rem 1rem 0.75rem 2.5rem',
@@ -198,7 +198,7 @@ const BranchModal: React.FC<BranchModalProps> = ({ isOpen, onClose, onSubmit, is
                   name="address"
                   value={formData.address}
                   onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                  placeholder="Detailed address..."
+                  placeholder={t('branches.placeholder_address')}
                   style={{
                     width: '100%',
                     padding: '0.75rem 1rem 0.75rem 2.5rem',

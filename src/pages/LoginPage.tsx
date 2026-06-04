@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { authApi } from '../api/auth';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import { getErrorMessage } from '../utils/format';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -64,7 +65,7 @@ const LoginPage: React.FC = () => {
 
       navigate('/admin');
     } catch (err: any) {
-      setError(err.response?.data?.message || t('login.invalid_credentials') || 'Invalid email or password');
+      setError(getErrorMessage(err, t));
     } finally {
       setLoading(false);
     }

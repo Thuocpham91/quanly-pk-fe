@@ -18,6 +18,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useBranchContext } from "../context/BranchContext";
 import Pagination from "../components/Pagination";
 import { type PaginatedResponse } from "../api/client";
+import { getErrorMessage } from "../utils/format";
 
 const UsersPage: React.FC = () => {
   const { t } = useTranslation();
@@ -48,6 +49,9 @@ const UsersPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       setIsModalOpen(false);
     },
+    onError: (error: any) => {
+      alert(t('common.error') + ': ' + getErrorMessage(error, t));
+    }
   });
 
   const updateMutation = useMutation({
@@ -58,6 +62,9 @@ const UsersPage: React.FC = () => {
       setIsModalOpen(false);
       setSelectedUser(null);
     },
+    onError: (error: any) => {
+      alert(t('common.error') + ': ' + getErrorMessage(error, t));
+    }
   });
 
   const deleteMutation = useMutation({
@@ -65,6 +72,9 @@ const UsersPage: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
+    onError: (error: any) => {
+      alert(t('common.error') + ': ' + getErrorMessage(error, t));
+    }
   });
 
   const handleCreateOrUpdate = (data: any) => {

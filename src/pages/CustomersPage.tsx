@@ -8,6 +8,7 @@ import Pagination from '../components/Pagination';
 import CustomerModal from '../components/CustomerModal';
 import CustomerDetailsModal from '../components/CustomerDetailsModal';
 import { useTranslation } from 'react-i18next';
+import { getErrorMessage } from '../utils/format';
 
 const CustomersPage: React.FC = () => {
   const { t } = useTranslation();
@@ -66,14 +67,19 @@ const CustomersPage: React.FC = () => {
   });
 
   const handleSubmit = async (data: Partial<Customer>) => {
-    if (selectedCustomer) {
-      await updateMutation.mutateAsync({ id: selectedCustomer.id, data });
-    } else {
-      if (!selectedBranchId) {
-        alert(t('common.select_branch_warning'));
-        return;
+    try {
+      if (selectedCustomer) {
+        await updateMutation.mutateAsync({ id: selectedCustomer.id, data });
+      } else {
+        if (!selectedBranchId) {
+          alert(t('common.select_branch_warning'));
+          return;
+        }
+        await createMutation.mutateAsync(data);
       }
-      await createMutation.mutateAsync(data);
+    } catch (error: any) {
+      alert(t('common.error') + ': ' + getErrorMessage(error, t));
+      throw error;
     }
   };
 

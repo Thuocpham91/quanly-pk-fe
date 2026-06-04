@@ -26,7 +26,8 @@
     "select_branch_warning": "Please select a branch before performing this action.",
     "btn_cancel": "Cancel",
     "btn_create": "Create",
-    "btn_save": "Save"
+    "btn_save": "Save",
+    "error": "Error"
   },
   "landing": {
     "hero_badge": "Best Veterinary Care in Town",
@@ -113,6 +114,8 @@
     "delete_confirm": "Are you sure you want to delete this branch?",
     "fetching": "Fetching branches...",
     "no_branches": "No branches found",
+    "placeholder_name": "Enter branch name...",
+    "placeholder_address": "Enter detailed address...",
     "btn_cancel": "Cancel",
     "btn_save": "Save Changes",
     "btn_create": "Create"
@@ -244,6 +247,27 @@
     "no_distributors": "No distributors found",
     "btn_cancel": "Cancel",
     "btn_save": "Save Changes",
-    "btn_create": "Add New"
+    "btn_create": "Add New",
+    "placeholder_name": "Enter distributor name...",
+    "placeholder_phone": "Enter phone number...",
+    "placeholder_email": "Enter email address...",
+    "placeholder_address": "Enter address...",
+    "placeholder_description": "Enter detailed description, terms, etc.",
+    "save_failed": "Failed to save distributor. Please check your input."
+  },
+  "errors": {
+    "email must be an email": "Email must be a valid email address",
+    "email must be a string": "Email must be a string",
+    "name should not be empty": "Name should not be empty",
+    "name must be a string": "Name must be a string",
+    "phone must be a phone number": "Phone must be a valid phone number",
+    "phone should not be empty": "Phone should not be empty",
+    "password must be longer than or equal to 6 characters": "Password must be at least 6 characters long",
+    "Email already exists": "Email already exists",
+    "Branch not found": "Branch not found",
+    "User not found": "User not found",
+    "Unauthorized": "Unauthorized",
+    "Forbidden resource": "Forbidden resource",
+    "Internal server error": "Internal server error"
   }
 }

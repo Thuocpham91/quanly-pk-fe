@@ -4,6 +4,7 @@ import { Plus, Search, Mail, Phone, MapPin, Edit2, Trash2, Building2 } from 'luc
 import { getDistributors, createDistributor, updateDistributor, deleteDistributor, type Distributor } from '../api/distributors';
 import { useTranslation } from 'react-i18next';
 import DistributorModal from '../components/DistributorModal';
+import { getErrorMessage } from '../utils/format';
 
 const DistributorsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -67,8 +68,8 @@ const DistributorsPage: React.FC = () => {
     if (window.confirm(t('distributors.delete_confirm'))) {
       try {
         await deleteMutation.mutateAsync(id);
-      } catch (error) {
-        console.error('Failed to delete distributor:', error);
+      } catch (error: any) {
+        alert(t('common.error') + ': ' + getErrorMessage(error, t));
       }
     }
   };

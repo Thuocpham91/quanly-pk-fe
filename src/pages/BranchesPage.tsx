@@ -22,6 +22,7 @@ import UserModal from '../components/UserModal';
 import ManageStaffModal from '../components/ManageStaffModal';
 import Pagination from '../components/Pagination';
 import { type PaginatedResponse } from '../api/client';
+import { getErrorMessage } from '../utils/format';
 
 const BranchesPage: React.FC = () => {
   const { t } = useTranslation();
@@ -50,7 +51,7 @@ const BranchesPage: React.FC = () => {
       setIsModalOpen(false);
     },
     onError: (error: any) => {
-      alert(t('common.error') + ': ' + (error.response?.data?.message || error.message));
+      alert(t('common.error') + ': ' + getErrorMessage(error, t));
     }
   });
 
@@ -62,7 +63,7 @@ const BranchesPage: React.FC = () => {
       setSelectedBranch(null);
     },
     onError: (error: any) => {
-      alert(t('common.error') + ': ' + (error.response?.data?.message || error.message));
+      alert(t('common.error') + ': ' + getErrorMessage(error, t));
     }
   });
 
@@ -72,7 +73,7 @@ const BranchesPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['branches'] });
     },
     onError: (error: any) => {
-      alert(t('common.error') + ': ' + (error.response?.data?.message || error.message));
+      alert(t('common.error') + ': ' + getErrorMessage(error, t));
     }
   });
 
@@ -83,6 +84,9 @@ const BranchesPage: React.FC = () => {
       setIsUserModalOpen(false);
       setBranchForNewUser(null);
     },
+    onError: (error: any) => {
+      alert(t('common.error') + ': ' + getErrorMessage(error, t));
+    }
   });
 
   const handleCreateOrUpdate = (data: any) => {

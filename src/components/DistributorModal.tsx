@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Building2, Phone, Mail, MapPin, FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { type Distributor } from '../api/distributors';
+import { getErrorMessage } from '../utils/format';
 
 interface DistributorModalProps {
   isOpen: boolean;
@@ -70,7 +71,7 @@ const DistributorModal: React.FC<DistributorModalProps> = ({
       onClose();
     } catch (err: any) {
       console.error('Failed to submit distributor:', err);
-      setError(err.response?.data?.message || 'Failed to save distributor. Please check your input.');
+      setError(getErrorMessage(err, t));
     } finally {
       setIsSubmitting(false);
     }
@@ -150,7 +151,7 @@ const DistributorModal: React.FC<DistributorModalProps> = ({
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  placeholder="Supplier Name..."
+                  placeholder={t('distributors.placeholder_name')}
                   style={{
                     width: '100%',
                     padding: '0.75rem 1rem 0.75rem 2.5rem',
@@ -174,7 +175,7 @@ const DistributorModal: React.FC<DistributorModalProps> = ({
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  placeholder="0123456789"
+                  placeholder={t('distributors.placeholder_phone')}
                   style={{
                     width: '100%',
                     padding: '0.75rem 1rem 0.75rem 2.5rem',
@@ -198,7 +199,7 @@ const DistributorModal: React.FC<DistributorModalProps> = ({
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  placeholder="contact@supplier.com"
+                  placeholder={t('distributors.placeholder_email')}
                   style={{
                     width: '100%',
                     padding: '0.75rem 1rem 0.75rem 2.5rem',
@@ -222,7 +223,7 @@ const DistributorModal: React.FC<DistributorModalProps> = ({
                   name="address"
                   value={formData.address}
                   onChange={handleChange}
-                  placeholder="123 Industrial St..."
+                  placeholder={t('distributors.placeholder_address')}
                   style={{
                     width: '100%',
                     padding: '0.75rem 1rem 0.75rem 2.5rem',
@@ -245,7 +246,7 @@ const DistributorModal: React.FC<DistributorModalProps> = ({
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
-                  placeholder="Supplier description, payment terms, etc."
+                  placeholder={t('distributors.placeholder_description')}
                   rows={3}
                   style={{
                     width: '100%',

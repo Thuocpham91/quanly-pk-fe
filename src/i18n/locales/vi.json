@@ -26,7 +26,8 @@
     "select_branch_warning": "Vui lòng chọn chi nhánh trước khi thực hiện thao tác này.",
     "btn_cancel": "Hủy bỏ",
     "btn_create": "Thêm mới",
-    "btn_save": "Lưu lại"
+    "btn_save": "Lưu lại",
+    "error": "Lỗi"
   },
   "landing": {
     "hero_badge": "Dịch vụ thú y tốt nhất khu vực",
@@ -113,6 +114,8 @@
     "delete_confirm": "Bạn có chắc chắn muốn xóa chi nhánh này không?",
     "fetching": "Đang tải chi nhánh...",
     "no_branches": "Không tìm thấy chi nhánh nào",
+    "placeholder_name": "Nhập tên chi nhánh...",
+    "placeholder_address": "Nhập địa chỉ chi tiết...",
     "btn_cancel": "Hủy",
     "btn_save": "Lưu thay đổi",
     "btn_create": "Tạo mới"
@@ -244,6 +247,27 @@
     "no_distributors": "Không tìm thấy nhà phân phối nào",
     "btn_cancel": "Hủy",
     "btn_save": "Lưu thay đổi",
-    "btn_create": "Thêm mới"
+    "btn_create": "Thêm mới",
+    "placeholder_name": "Nhập tên nhà phân phối...",
+    "placeholder_phone": "Nhập số điện thoại...",
+    "placeholder_email": "Nhập địa chỉ email...",
+    "placeholder_address": "Nhập địa chỉ...",
+    "placeholder_description": "Nhập mô tả chi tiết, điều khoản thanh toán...",
+    "save_failed": "Lưu nhà phân phối thất bại. Vui lòng kiểm tra lại thông tin."
+  },
+  "errors": {
+    "email must be an email": "Email không đúng định dạng",
+    "email must be a string": "Email phải là một chuỗi ký tự",
+    "name should not be empty": "Tên không được để trống",
+    "name must be a string": "Tên phải là một chuỗi ký tự",
+    "phone must be a phone number": "Số điện thoại không hợp lệ",
+    "phone should not be empty": "Số điện thoại không được để trống",
+    "password must be longer than or equal to 6 characters": "Mật khẩu phải từ 6 ký tự trở lên",
+    "Email already exists": "Email đã được sử dụng",
+    "Branch not found": "Không tìm thấy chi nhánh",
+    "User not found": "Không tìm thấy người dùng",
+    "Unauthorized": "Không có quyền truy cập hoặc phiên làm việc đã hết hạn",
+    "Forbidden resource": "Bạn không có quyền thực hiện thao tác này",
+    "Internal server error": "Lỗi hệ thống phía máy chủ"
   }
 }
