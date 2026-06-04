@@ -2,12 +2,26 @@ import { io, Socket } from 'socket.io-client';
 
 let socket: Socket | null = null;
 
+const getSocketUrl = (): string => {
+  const apiUrl = import.meta.env.VITE_API_URL;
+  if (!apiUrl) return 'http://localhost:9005';
+
+  try {
+    const url = new URL(apiUrl);
+    return url.origin; // Trích xuất origin để tránh coi '/api/v1' là namespace
+  } catch (e) {
+    // Nếu là đường dẫn tương đối (như '/api/v1'), trả về chuỗi rỗng
+    // để Socket.io dùng chính origin của trang hiện tại
+    return '';
+  }
+};
+
 export const connectSocket = (token: string): Socket => {
   if (socket) {
     socket.disconnect();
   }
 
-  socket = io(import.meta.env.VITE_API_URL || 'http://localhost:9005', {
+  socket = io(getSocketUrl(), {
     auth: {
       token: `Bearer ${token}`
     },
