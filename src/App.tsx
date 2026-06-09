@@ -24,6 +24,7 @@ import StocktakeListPage from './pages/StocktakeListPage';
 import StocktakeFormPage from './pages/StocktakeFormPage';
 import InventoryTransferPage from './pages/InventoryTransferPage';
 import PermissionGuard from './guards/PermissionGuard';
+import NotificationsPage from './pages/NotificationsPage';
 
 import { BranchProvider } from './context/BranchContext';
 
@@ -71,6 +72,7 @@ function App() {
               <Route path="roles"                   element={<P path="/admin/roles"><RolesPage /></P>} />
               <Route path="branches"                element={<P path="/admin/branches"><BranchesPage /></P>} />
               <Route path="settings"                element={<P path="/admin/settings"><SettingsPage /></P>} />
+              <Route path="notifications"           element={<P path="/admin/notifications"><NotificationsPage /></P>} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

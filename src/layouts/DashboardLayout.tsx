@@ -5,7 +5,10 @@ import { useQuery } from '@tanstack/react-query';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { useBranchContext } from '../context/BranchContext';
 import branchesApi from '../api/branches';
-import { connectSocket, disconnectSocket } from '../api/socket';
+import notificationsApi from '../api/notifications';
+import { messaging } from '../api/firebase';
+import { getToken, onMessage } from 'firebase/messaging';
+import { authApi } from '../api/auth';
 import { 
   LayoutDashboard, 
   Dog, 
@@ -39,6 +42,11 @@ const DashboardLayout: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(window.innerWidth < 768);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  type AppNotification = { id: string; userId: string; type: 'info'|'success'|'warning'|'error'; message: string; read: boolean; data: Record<string,any>|null; createdAt: string; };
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['Tổng quan', 'Bán hàng']));
   const [toasts, setToasts] = useState<{
     id: string;
@@ -60,6 +68,114 @@ const DashboardLayout: React.FC = () => {
     return null;
   }, []);
 
+  const mergedNotifications = notifications;
+
+  const unreadCount = React.useMemo(() => {
+    return notifications.filter((n) => !n.read).length;
+  }, [notifications]);
+
+  const markAllAsRead = async () => {
+    try {
+      await notificationsApi.markAllAsRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+    }
+  };
+
+  const markAsRead = async (id: string) => {
+    try {
+      await notificationsApi.markAsRead(id);
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+      );
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
+
+  const formatTimeAgo = (dateStr: string) => {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      const now = new Date();
+      const diffMs = now.getTime() - date.getTime();
+      const diffSec = Math.floor(diffMs / 1000);
+      const diffMin = Math.floor(diffSec / 60);
+      const diffHr = Math.floor(diffMin / 60);
+      const diffDay = Math.floor(diffHr / 24);
+
+      if (diffSec < 60) {
+        return 'Vừa xong';
+      } else if (diffMin < 60) {
+        return `${diffMin} phút trước`;
+      } else if (diffHr < 24) {
+        return `${diffHr} giờ trước`;
+      } else if (diffDay < 7) {
+        return `${diffDay} ngày trước`;
+      } else {
+        return date.toLocaleDateString('vi-VN', {
+          hour: '2-digit',
+          minute: '2-digit',
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        });
+      }
+    } catch (e) {
+      return '';
+    }
+  };
+
+  const getNotificationStyles = (type: string) => {
+    switch (type) {
+      case 'success':
+        return {
+          bg: 'rgba(16, 185, 129, 0.1)',
+          icon: (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+              <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
+          )
+        };
+      case 'warning':
+        return {
+          bg: 'rgba(245, 158, 11, 0.1)',
+          icon: (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+          )
+        };
+      case 'error':
+        return {
+          bg: 'rgba(239, 68, 68, 0.1)',
+          icon: (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="15" y1="9" x2="9" y2="15" />
+              <line x1="9" y1="9" x2="15" y2="15" />
+            </svg>
+          )
+        };
+      case 'info':
+      default:
+        return {
+          bg: 'rgba(59, 130, 246, 0.1)',
+          icon: (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="16" x2="12" y2="12" />
+              <line x1="12" y1="8" x2="12.01" y2="8" />
+            </svg>
+          )
+        };
+    }
+  };
+
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 768;
@@ -72,35 +188,101 @@ const DashboardLayout: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // 1. Fetch initial notifications list once on mount
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      const socket = connectSocket(token);
-      
-      socket.on('notification', (data: any) => {
-        console.log('🔔 Notification Received:', data);
-        const type = data.type || 'info';
-        const message = data.message || 'Có thông báo mới';
-        
-        const id = Math.random().toString(36).substring(2, 9);
-        setToasts(prev => [...prev, {
-          id,
-          type: type as any,
-          message,
-          timestamp: new Date().toISOString(),
-          duration: 6000
-        }]);
-        
-        setTimeout(() => {
-          setToasts(prev => prev.filter(t => t.id !== id));
-        }, 6000);
-      });
-      
-      return () => {
-        disconnectSocket();
-      };
-    }
-  }, []);
+    if (!currentUser?.id) return;
+    
+    const fetchNotifications = async () => {
+      try {
+        const res = await notificationsApi.getMyNotifications(1, 50);
+        const data = res?.data || [];
+        setNotifications(data);
+      } catch (err) {
+        // silently ignore
+      }
+    };
+
+    fetchNotifications();
+  }, [currentUser?.id]);
+
+  // 2. Initialize Firebase Messaging (FCM)
+  useEffect(() => {
+    if (!currentUser?.id || !messaging) return;
+
+    const showToast = (notification: any) => {
+      const type = notification.type || 'info';
+      const message = notification.message || 'Có thông báo mới';
+      const toastId = Math.random().toString(36).substring(2, 9);
+      setToasts(prev => [...prev, {
+        id: toastId,
+        type: type as any,
+        message,
+        timestamp: new Date().toISOString(),
+        duration: 6000
+      }]);
+      setTimeout(() => {
+        setToasts(prev => prev.filter(t => t.id !== toastId));
+      }, 6000);
+    };
+
+    const setupFCM = async () => {
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          // Register Service Worker explicitly to avoid 10s timeout on localhost dev environment
+          if ('serviceWorker' in navigator) {
+            const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+            // Lấy token đăng ký FCM từ Firebase sử dụng service worker registration đã đăng ký
+            const token = await getToken(messaging, {
+              serviceWorkerRegistration: registration,
+            });
+            if (token) {
+              console.log('🔥 FCM Registration Token:', token);
+              await authApi.updateFcmToken(token);
+            }
+          } else {
+            // Fallback if Service Workers are not supported (e.g. non-HTTPS/non-localhost)
+            const token = await getToken(messaging);
+            if (token) {
+              console.log('🔥 FCM Registration Token (fallback):', token);
+              await authApi.updateFcmToken(token);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error setting up FCM:', err);
+      }
+    };
+
+    setupFCM();
+
+    // Lắng nghe thông báo khi ứng dụng đang mở (foreground)
+    const unsubscribe = onMessage(messaging, (payload) => {
+      console.log('🔔 Foreground FCM Message received:', payload);
+      const { notification, data } = payload;
+      if (notification) {
+        const newNoti: AppNotification = {
+          id: data?.id || Math.random().toString(36).substring(2, 9),
+          userId: currentUser.id,
+          type: (data?.type || 'info') as any,
+          message: notification.body || notification.title || '',
+          read: false,
+          data: data ? data : null,
+          createdAt: new Date().toISOString(),
+        };
+
+        // Hiển thị toast
+        showToast(newNoti);
+
+        // Thêm vào đầu danh sách thông báo trên state
+        setNotifications(prev => [newNoti, ...prev]);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [currentUser?.id]);
 
   const { data: paginatedBranches } = useQuery({
     queryKey: ['branches'],
@@ -110,14 +292,18 @@ const DashboardLayout: React.FC = () => {
   const allBranches = paginatedBranches?.data || [];
 
   // Lọc chi nhánh theo user được phân quyền
-  const userBranchRoles: any[] = currentUser?.userBranchRoles || [];
-  const userBranchIds = userBranchRoles.map((ubr: any) => ubr.branchId);
   const isAdmin = currentUser?.email?.toLowerCase() === 'admin@gmail.com';
 
-  // Admin thấy tất cả, user thường chỉ thấy chi nhánh được phân
-  const branches = isAdmin
-    ? allBranches
-    : allBranches.filter(b => userBranchIds.includes(b.id));
+  const userBranchRoles: any[] = React.useMemo(() => {
+    return currentUser?.userBranchRoles || [];
+  }, [currentUser]);
+
+  const branches = React.useMemo(() => {
+    const userBranchIds = userBranchRoles.map((ubr: any) => ubr.branchId);
+    return isAdmin
+      ? allBranches
+      : allBranches.filter(b => userBranchIds.includes(b.id));
+  }, [allBranches, isAdmin, userBranchRoles]);
 
   // Kiểm tra và tự động chọn chi nhánh hợp lệ (tránh lấy id chi nhánh cũ ở DB khác lưu trong localStorage)
   React.useEffect(() => {
@@ -422,7 +608,7 @@ const DashboardLayout: React.FC = () => {
           justifyContent: 'space-between',
           padding: isMobile ? '0 0.875rem' : '0 2rem',
           gap: '0.5rem',
-          overflow: 'hidden',
+          overflow: 'visible',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '0.75rem' : '1.5rem' }}>
             <button 
@@ -485,21 +671,221 @@ const DashboardLayout: React.FC = () => {
 
             {/* Ẩn LanguageSwitcher trên mobile để tiết kiệm chỗ */}
             {!isMobile && <LanguageSwitcher />}
-            {!isMobile && (
-              <button style={{ position: 'relative', background: 'none', color: 'var(--foreground)' }}>
+            <div style={{ position: 'relative' }}>
+              <button 
+                onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                style={{ 
+                  position: 'relative', 
+                  background: 'none', 
+                  border: 'none', 
+                  cursor: 'pointer', 
+                  color: 'var(--foreground)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '0.4rem',
+                  borderRadius: '0.5rem',
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(99, 102, 241, 0.05)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              >
                 <Bell size={20} />
-                <span style={{ 
-                  position: 'absolute', 
-                  top: '-2px', 
-                  right: '-2px', 
-                  width: '8px', 
-                  height: '8px', 
-                  backgroundColor: 'var(--danger)', 
-                  borderRadius: '50%',
-                  border: '2px solid var(--card)'
-                }}></span>
+                {unreadCount > 0 && (
+                  <span style={{ 
+                    position: 'absolute', 
+                    top: '-2px', 
+                    right: '-2px', 
+                    minWidth: '16px', 
+                    height: '16px', 
+                    padding: '0 4px',
+                    backgroundColor: 'var(--danger)', 
+                    color: 'white',
+                    borderRadius: '50%',
+                    border: '2px solid var(--card)',
+                    fontSize: '9px',
+                    fontWeight: 'bold',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
               </button>
-            )}
+
+              {/* Notification Dropdown */}
+              {isNotificationOpen && (
+                <>
+                  {/* Backdrop */}
+                  <div
+                    onClick={() => setIsNotificationOpen(false)}
+                    style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 998 }}
+                  />
+                  {/* Dropdown Content */}
+                  <div style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 12px)',
+                    right: 0,
+                    width: isMobile ? '290px' : '360px',
+                    backgroundColor: 'white',
+                    borderRadius: '1rem',
+                    boxShadow: '0 20px 40px -8px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05)',
+                    zIndex: 999,
+                    overflow: 'hidden',
+                    animation: 'dropdownSlideIn 0.18s cubic-bezier(0.16,1,0.3,1)',
+                  }}>
+                    {/* Header */}
+                    <div style={{ 
+                      padding: '1rem 1.25rem', 
+                      borderBottom: '1px solid #f1f5f9',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between'
+                    }}>
+                      <span style={{ fontWeight: '700', fontSize: '0.95rem', color: '#1e293b' }}>Thông báo</span>
+                      {unreadCount > 0 && (
+                        <button 
+                          onClick={() => {
+                            markAllAsRead();
+                            setIsNotificationOpen(false);
+                          }}
+                          style={{ 
+                            background: 'none', 
+                            border: 'none', 
+                            padding: 0, 
+                            color: 'var(--primary)', 
+                            fontSize: '0.75rem', 
+                            fontWeight: '600',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Đánh dấu đã đọc tất cả
+                        </button>
+                      )}
+                    </div>
+
+                    {/* List */}
+                    <div style={{ maxHeight: '320px', overflowY: 'auto' }}>
+                      {mergedNotifications.length === 0 ? (
+                        <div style={{ padding: '2rem 1.5rem', textAlign: 'center', color: '#94a3b8' }}>
+                          <Bell size={32} style={{ margin: '0 auto 0.5rem', opacity: 0.4 }} />
+                          <p style={{ fontSize: '0.875rem' }}>Không có thông báo nào</p>
+                        </div>
+                      ) : (
+                        mergedNotifications.slice(0, 5).map((notification) => {
+                          const isUnread = !notification.read;
+                          const iconAndColors = getNotificationStyles(notification.type);
+                          return (
+                            <div 
+                              key={notification.id}
+                              onClick={async () => {
+                                if (isUnread) {
+                                  await markAsRead(notification.id);
+                                }
+                                setIsNotificationOpen(false);
+                              }}
+                              style={{ 
+                                display: 'flex', 
+                                gap: '0.75rem', 
+                                padding: '1rem 1.25rem', 
+                                borderBottom: '1px solid #f8fafc',
+                                cursor: 'pointer',
+                                transition: 'background-color 0.15s',
+                                backgroundColor: isUnread ? 'rgba(99, 102, 241, 0.02)' : 'transparent',
+                                position: 'relative'
+                              }}
+                              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = isUnread ? 'rgba(99, 102, 241, 0.02)' : 'transparent'}
+                            >
+                              {/* Type Icon */}
+                              <div style={{ 
+                                width: '36px', 
+                                height: '36px', 
+                                borderRadius: '0.5rem', 
+                                backgroundColor: iconAndColors.bg,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0
+                              }}>
+                                {iconAndColors.icon}
+                              </div>
+
+                              {/* Message & Time */}
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <p style={{ 
+                                  margin: 0, 
+                                  fontSize: '0.85rem', 
+                                  fontWeight: isUnread ? '600' : '500', 
+                                  color: '#334155',
+                                  lineHeight: '1.4',
+                                  whiteSpace: 'normal',
+                                  wordBreak: 'break-word'
+                                }}>
+                                  {notification.message}
+                                </p>
+                                <p style={{ 
+                                  margin: '0.25rem 0 0 0', 
+                                  fontSize: '0.75rem', 
+                                  color: '#94a3b8' 
+                                }}>
+                                  {formatTimeAgo(notification.createdAt)}
+                                </p>
+                              </div>
+
+                              {/* Unread indicator dot */}
+                              {isUnread && (
+                                <span style={{
+                                  position: 'absolute',
+                                  right: '12px',
+                                  top: '50%',
+                                  transform: 'translateY(-50%)',
+                                  width: '6px',
+                                  height: '6px',
+                                  borderRadius: '50%',
+                                  backgroundColor: 'var(--primary)'
+                                }} />
+                              )}
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+
+                    {/* Footer */}
+                    <div style={{ 
+                      borderTop: '1px solid #f1f5f9',
+                      backgroundColor: '#f8fafc'
+                    }}>
+                      <Link 
+                        to="/admin/notifications"
+                        onClick={() => {
+                          setIsNotificationOpen(false);
+                        }}
+                        style={{ 
+                          display: 'block',
+                          width: '100%', 
+                          padding: '0.75rem', 
+                          background: 'none', 
+                          border: 'none', 
+                          color: 'var(--primary)', 
+                          fontSize: '0.825rem', 
+                          fontWeight: '600',
+                          textAlign: 'center',
+                          cursor: 'pointer',
+                          textDecoration: 'none'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                      >
+                        Xem thêm
+                      </Link>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
             <div style={{ position: 'relative' }}>
               <div 
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
@@ -670,6 +1056,16 @@ const DashboardLayout: React.FC = () => {
         pointerEvents: 'none',
       }}>
         <style>{`
+          @keyframes dropdownSlideIn {
+            from {
+              opacity: 0;
+              transform: translateY(-8px) scale(0.95);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+            }
+          }
           @keyframes toast-slide-in {
             from {
               transform: translateX(120%) scale(0.9);
@@ -822,6 +1218,273 @@ const DashboardLayout: React.FC = () => {
           );
         })}
       </div>
+
+      {/* Notification History Modal */}
+      {isHistoryModalOpen && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(15, 23, 42, 0.4)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10000,
+          padding: '1rem',
+          animation: 'fadeIn 0.2s ease-out'
+        }}>
+          <style>{`
+            @keyframes fadeIn {
+              from { opacity: 0; }
+              to { opacity: 1; }
+            }
+            @keyframes modalSlideUp {
+              from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.98);
+              }
+              to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+              }
+            }
+          `}</style>
+          
+          {/* Modal Container */}
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '1rem',
+            width: '100%',
+            maxWidth: '560px',
+            maxHeight: '80vh',
+            display: 'flex',
+            flexDirection: 'column',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            overflow: 'hidden',
+            animation: 'modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+          }}>
+            {/* Modal Header */}
+            <div style={{
+              padding: '1.25rem 1.5rem',
+              borderBottom: '1px solid #e2e8f0',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              backgroundColor: '#f8fafc'
+            }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700', color: '#0f172a' }}>Lịch sử thông báo</h3>
+                <p style={{ margin: '0.15rem 0 0 0', fontSize: '0.78rem', color: '#64748b' }}>
+                  Tổng số {mergedNotifications.length} thông báo {unreadCount > 0 && `(${unreadCount} chưa đọc)`}
+                </p>
+              </div>
+              <button
+                onClick={() => setIsHistoryModalOpen(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#94a3b8',
+                  cursor: 'pointer',
+                  padding: '6px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.backgroundColor = '#f1f5f9';
+                  e.currentTarget.style.color = '#475569';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = '#94a3b8';
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal Actions */}
+            {unreadCount > 0 && (
+              <div style={{
+                padding: '0.75rem 1.5rem',
+                borderBottom: '1px solid #f1f5f9',
+                display: 'flex',
+                justifyContent: 'flex-end',
+                backgroundColor: '#ffffff'
+              }}>
+                <button
+                  onClick={markAllAsRead}
+                  style={{
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    color: 'var(--primary)',
+                    border: 'none',
+                    borderRadius: '0.375rem',
+                    padding: '0.35rem 0.75rem',
+                    fontSize: '0.78rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(99, 102, 241, 0.18)'}
+                  onMouseLeave={e => e.currentTarget.style.backgroundColor = 'rgba(99, 102, 241, 0.1)'}
+                >
+                  Đánh dấu đã đọc tất cả
+                </button>
+              </div>
+            )}
+
+            {/* Modal Body (List) */}
+            <div style={{
+              flex: 1,
+              overflowY: 'auto',
+              padding: '0.5rem 0'
+            }}>
+              {mergedNotifications.length === 0 ? (
+                <div style={{ padding: '3rem 2rem', textAlign: 'center', color: '#94a3b8' }}>
+                  <Bell size={48} style={{ margin: '0 auto 1rem', opacity: 0.3 }} />
+                  <p style={{ fontSize: '0.9rem', fontWeight: '500' }}>Không có lịch sử thông báo nào</p>
+                </div>
+              ) : (
+                mergedNotifications.map((notification) => {
+                  const isUnread = !notification.read;
+                  const iconAndColors = getNotificationStyles(notification.type);
+                  return (
+                    <div
+                      key={notification.id}
+                      onClick={async () => {
+                        if (isUnread) {
+                          await markAsRead(notification.id);
+                        }
+                      }}
+                      style={{
+                        display: 'flex',
+                        gap: '1rem',
+                        padding: '1.1rem 1.5rem',
+                        borderBottom: '1px solid #f1f5f9',
+                        cursor: 'pointer',
+                        transition: 'background-color 0.2s',
+                        backgroundColor: isUnread ? 'rgba(99, 102, 241, 0.02)' : 'transparent',
+                        position: 'relative'
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                      onMouseLeave={e => e.currentTarget.style.backgroundColor = isUnread ? 'rgba(99, 102, 241, 0.02)' : 'transparent'}
+                    >
+                      {/* Icon */}
+                      <div style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '0.5rem',
+                        backgroundColor: iconAndColors.bg,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0
+                      }}>
+                        {iconAndColors.icon}
+                      </div>
+
+                      {/* Content */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{
+                          margin: 0,
+                          fontSize: '0.875rem',
+                          fontWeight: isUnread ? '600' : '500',
+                          color: '#1e293b',
+                          lineHeight: '1.4',
+                          whiteSpace: 'normal',
+                          wordBreak: 'break-word'
+                        }}>
+                          {notification.message}
+                        </p>
+                        <div style={{
+                          margin: '0.35rem 0 0 0',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          fontSize: '0.75rem',
+                          color: '#94a3b8'
+                        }}>
+                          <span>{formatTimeAgo(notification.createdAt)}</span>
+                          <span>•</span>
+                          <span>
+                            {new Date(notification.createdAt).toLocaleString('vi-VN', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric'
+                            })}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Unread dot */}
+                      {isUnread && (
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          paddingLeft: '0.5rem'
+                        }}>
+                          <span style={{
+                            width: '8px',
+                            height: '8px',
+                            borderRadius: '50%',
+                            backgroundColor: 'var(--primary)',
+                            boxShadow: '0 0 0 2px rgba(99, 102, 241, 0.2)'
+                          }} />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div style={{
+              padding: '1rem 1.5rem',
+              borderTop: '1px solid #e2e8f0',
+              display: 'flex',
+              justifyContent: 'flex-end',
+              backgroundColor: '#f8fafc'
+            }}>
+              <button
+                onClick={() => setIsHistoryModalOpen(false)}
+                style={{
+                  backgroundColor: '#ffffff',
+                  border: '1px solid #cbd5e1',
+                  color: '#475569',
+                  borderRadius: '0.5rem',
+                  padding: '0.5rem 1rem',
+                  fontSize: '0.875rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.backgroundColor = '#f1f5f9';
+                  e.currentTarget.style.color = '#1e293b';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.backgroundColor = '#ffffff';
+                  e.currentTarget.style.color = '#475569';
+                }}
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

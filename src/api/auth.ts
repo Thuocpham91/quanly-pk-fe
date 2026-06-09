@@ -9,4 +9,8 @@ export const authApi = {
     const response = await api.post('/auth/register', userData);
     return response.data;
   },
+  updateFcmToken: async (token: string) => {
+    const response = await api.post('/auth/fcm-token', { token });
+    return response.data;
+  },
 };

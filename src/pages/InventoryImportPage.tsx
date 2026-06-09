@@ -83,10 +83,13 @@ const InventoryImportPage: React.FC = () => {
       setDistributorId(editingBatch.distributorId || '');
       setInvoiceName(editingBatch.invoiceName || '');
       setPersonnelId(editingBatch.personnelName || '');
-      setTaxPercentage(editingBatch.taxAmount ? (editingBatch.taxAmount / (editingBatch.costPrice || 1)) * 100 : 0); // Simplified back-calc
-      setDiscountValue(editingBatch.discountAmount || 0);
+      const taxVal = Number(editingBatch.taxAmount) || 0;
+      const costVal = Number(editingBatch.costPrice) || 0;
+      setTaxPercentage(costVal > 0 ? (taxVal / costVal) * 100 : 0);
+
+      setDiscountValue(Number(editingBatch.discountAmount) || 0);
       setDiscountType('fixed');
-      setShippingFee(editingBatch.shippingFee || 0);
+      setShippingFee(Number(editingBatch.shippingFee) || 0);
       
       // Calculate total for the item
       // Note: In our new system costPrice is total.

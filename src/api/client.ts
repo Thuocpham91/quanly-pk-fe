@@ -7,11 +7,16 @@ const api = axios.create({
   },
 });
 
-// Add interceptor to include token
+// Add interceptor to include token and selected branch
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  const selectedBranchId = localStorage.getItem('selectedBranchId');
+  if (selectedBranchId) {
+    config.headers['x-branch-id'] = selectedBranchId;
   }
 
   return config;
